@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>DinoFiles v5 (real)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#0f1b2d; --muted:#9db0c6; --text:#e7f0ff; --acc:#5eead4; --acc2:#60a5fa;
+      --danger:#fb7185; --warn:#fbbf24; --ok:#34d399;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#070b14,#0b1220 35%,#0b1220);color:var(--text)}
+    header{position:sticky;top:0;background:rgba(11,18,32,.85);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08);z-index:50}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 16px}
+    h1{margin:0;font-size:22px;display:flex;align-items:center;gap:10px}
+    h1 .logo{font-size:22px}
+    .sub{margin:6px 0 0;color:var(--muted);font-size:13px}
+    main{max-width:1100px;margin:0 auto;padding:18px 16px 50px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+    @media (max-width: 900px){.grid{grid-template-columns:1fr}}
+    .card{background:rgba(15,27,45,.85);border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+    .card .hd{padding:14px 14px 10px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .card .bd{padding:14px}
+    .pill{font-size:12px;color:#07101e;background:linear-gradient(90deg,var(--acc),#a7f3d0);padding:6px 10px;border-radius:999px;font-weight:700}
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    button,.btn{
+      appearance:none;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+      color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px;
+      display:inline-flex;align-items:center;gap:8px;transition:.15s transform,.15s background,.15s border;
+    }
+    button:hover{background:rgba(255,255,255,.10);transform:translateY(-1px)}
+    button.primary{background:linear-gradient(90deg,var(--acc2),#22c55e);border-color:transparent;color:#07101e}
+    button.danger{background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.35);color:#ffd4dc}
+    button.ghost{background:transparent}
+    .small{font-size:12px;color:var(--muted)}
+    .drop{
+      border:2px dashed rgba(255,255,255,.18);border-radius:16px;padding:18px;min-height:120px;
+      display:flex;gap:14px;align-items:center;justify-content:space-between;
+      background:linear-gradient(180deg,rgba(96,165,250,.10),rgba(15,27,45,.0));
+    }
+    .drop strong{font-size:15px}
+    .drop .left{display:flex;gap:12px;align-items:center}
+    .iconBig{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:rgba(94,234,212,.14);border:1px solid rgba(94,234,212,.25)}
+    input[type=file]{display:none}
+    .formats{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-weight:800;font-size:12px;color:var(--muted);background:rgba(255,255,255,.04)}
+    .chip.sel{color:#07101e;border-color:transparent;background:linear-gradient(90deg,var(--acc),#a7f3d0)}
+    .split{display:flex;gap:10px;flex-wrap:wrap}
+    .toggle{display:flex;align-items:center;gap:8px}
+    .toggle input{width:18px;height:18px}
+    .thumbs{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;
+    }
+    .thumb{
+      position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);
+      min-height:160px;
+    }
+    .thumb .topbar{
+      position:absolute;inset:8px 8px auto 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:3
+    }
+    .badge{font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14)}
+    .thumb .actions{display:flex;gap:6px}
+    .miniBtn{
+      width:30px;height:30px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.35);color:var(--text);
+      display:grid;place-items:center;cursor:pointer;font-weight:900
+    }
+    .miniBtn:hover{background:rgba(0,0,0,.55)}
+    .thumb canvas,.thumb img{width:100%;height:160px;object-fit:cover;display:block;filter:saturate(1.05) contrast(1.02)}
+    .thumb .bot{
+      padding:10px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;gap:10px
+    }
+    .thumb label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer}
+    .thumb input[type=checkbox]{width:16px;height:16px}
+    .hint{color:var(--muted);font-size:12px;line-height:1.35}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
+    .modal.show{display:flex}
+    .modal .panel{max-width:980px;width:100%;background:rgba(15,27,45,.95);border:1px solid rgba(255,255,255,.14);border-radius:18px;overflow:hidden}
+    .modal .ph{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.10);display:flex;justify-content:space-between;align-items:center}
+    .modal .pb{padding:12px}
+    .modal .pb canvas,.modal .pb img{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:12px}
+    .progress{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+    .bar{height:100%;width:0;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .2s}
+    .statusLine{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:var(--muted)}
+    footer{max-width:1100px;margin:0 auto;padding:14px 16px;color:var(--muted);font-size:12px}
+    a{color:var(--acc);text-decoration:none}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1><span class="logo">🦖</span> DinoFiles <span class="pill">v5 (real)</span></h1>
+    <div class="sub">Łącz, porządkuj, dopasuj do A4 „jak skan”, wyciągaj tekst OCR — wszystko w przeglądarce. (beta)</div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card">
+      <div class="hd">
+        <div>
+          <div style="font-weight:900">Pliki</div>
+          <div class="small">Obsługiwane: JPG, PNG, PDF • do 20 plików / 50 stron (demo)</div>
+        </div>
+        <div class="row">
+          <button id="btnClear" class="danger" title="Usuń wszystko">🗑️ Usuń wszystko</button>
+          <button id="btnPick" class="primary">📁 Wybierz pliki</button>
+          <input id="fileInput" type="file" multiple accept="image/*,application/pdf"/>
+        </div>
+      </div>
+      <div class="bd">
+        <div id="drop" class="drop" tabindex="0">
+          <div class="left">
+            <div class="iconBig">⬇️</div>
+            <div>
+              <strong>Przeciągnij pliki tutaj</strong>
+              <div class="hint">Upuść pliki w tym polu (drag&drop). Nie otworzą się w nowych kartach.</div>
+            </div>
+          </div>
+          <div class="hint">albo kliknij <b>Wybierz pliki</b></div>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="statusLine">
+          <div class="small">Strony: <b id="countPages">0</b> • Zaznaczone: <b id="countSel">0</b></div>
+          <div class="row">
+            <button id="btnSelAll">✅ Zaznacz wszystko</button>
+            <button id="btnSelNone">☑️ Odznacz</button>
+            <button id="btnDelSel" class="danger">✂️ Usuń zaznaczone</button>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <div id="thumbs" class="thumbs"></div>
+      </div>
+    </section>
+
+    <aside class="card">
+      <div class="hd">
+        <div>
+          <div style="font-weight:900">Akcje</div>
+          <div class="small">Wybierz format i sposób pobrania</div>
+        </div>
+        <div class="pill">offline-first</div>
+      </div>
+      <div class="bd">
+        <div class="small" style="margin-bottom:8px">Format wyjściowy:</div>
+        <div class="formats" id="formats"></div>
+
+        <div style="height:12px"></div>
+        <div class="split">
+          <label class="toggle"><input id="optMerged" type="radio" name="bundle" checked> Jeden plik (scal)</label>
+          <label class="toggle"><input id="optSeparate" type="radio" name="bundle"> Pojedyncze pliki</label>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="split">
+          <label class="toggle"><input id="optA4" type="checkbox" checked> Dopasuj do A4 „jak skan” (PDF)</label>
+          <label class="toggle"><input id="optCover" type="checkbox" checked> Wypełnij stronę (cover)</label>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="split">
+          <button id="btnMake" class="primary" style="width:100%;justify-content:center;font-size:14px">⚡ Generuj / Pobierz</button>
+          <button id="btnOCR" style="width:100%;justify-content:center">🔎 OCR → TXT/CSV/DOCX</button>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <div class="mono" id="log" style="margin-top:10px">Gotowe.</div>
+
+        <div style="height:14px"></div>
+        <div class="hint">
+          <b>Uwaga:</b> w tej wersji przetwarzanie dzieje się w Twojej przeglądarce. PDF-y z „OCR” mogą zająć chwilę na słabszym telefonie.
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="modal" id="modal">
+  <div class="panel">
+    <div class="ph">
+      <div class="row">
+        <b id="modalTitle">Podgląd</b>
+        <span class="badge" id="modalBadge"></span>
+      </div>
+      <div class="row">
+        <button class="ghost" id="zoomIn">➕</button>
+        <button class="ghost" id="zoomOut">➖</button>
+        <button class="danger" id="closeModal">✖</button>
+      </div>
+    </div>
+    <div class="pb" id="modalBody"></div>
+  </div>
+</div>
+
+<footer>
+  © 2026 DinoFiles • beta • <span class="mono">v5-real</span>
+</footer>
+
+<!-- CDN libs (no build) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+<script>
+(() => {
+  // Prevent browser from opening files in new tab on drop
+  ['dragenter','dragover','dragleave','drop'].forEach(ev => {
+    document.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+  });
+
+  const MAX_FILES = 20;
+  const MAX_PAGES = 50;
+
+  const fileInput = document.getElementById('fileInput');
+  const btnPick = document.getElementById('btnPick');
+  const drop = document.getElementById('drop');
+  const thumbsEl = document.getElementById('thumbs');
+  const logEl = document.getElementById('log');
+  const barEl = document.getElementById('bar');
+  const countPagesEl = document.getElementById('countPages');
+  const countSelEl = document.getElementById('countSel');
+
+  const btnClear = document.getElementById('btnClear');
+  const btnSelAll = document.getElementById('btnSelAll');
+  const btnSelNone = document.getElementById('btnSelNone');
+  const btnDelSel = document.getElementById('btnDelSel');
+
+  const formatsEl = document.getElementById('formats');
+  const btnMake = document.getElementById('btnMake');
+  const btnOCR = document.getElementById('btnOCR');
+
+  const optMerged = document.getElementById('optMerged');
+  const optSeparate = document.getElementById('optSeparate');
+  const optA4 = document.getElementById('optA4');
+  const optCover = document.getElementById('optCover');
+
+  const modal = document.getElementById('modal');
+  const closeModal = document.getElementById('closeModal');
+  const modalBody = document.getElementById('modalBody');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBadge = document.getElementById('modalBadge');
+  const zoomIn = document.getElementById('zoomIn');
+  const zoomOut = document.getElementById('zoomOut');
+  let modalScale = 1;
+
+  // pdf.js worker
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.js";
+
+  const FORMATS = ['pdf','docx','jpg','png','txt','csv'];
+  let selectedFormat = 'pdf';
+
+  let pages = []; // each: { id, kind:'img'|'pdf', srcBlob, dataUrl, w,h, rotation, selected, filename, pageIndex, textCache }
+  let idSeq = 1;
+
+  function setLog(msg){ logEl.textContent = msg; }
+  function setProg(p){ barEl.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+  function updateCounts(){
+    countPagesEl.textContent = pages.length;
+    countSelEl.textContent = pages.filter(p=>p.selected).length;
+  }
+
+  function makeChip(fmt){
+    const el = document.createElement('div');
+    el.className = 'chip' + (fmt===selectedFormat?' sel':'');
+    el.textContent = fmt.toUpperCase();
+    el.addEventListener('click', ()=>{
+      selectedFormat = fmt;
+      [...formatsEl.children].forEach(ch => ch.classList.remove('sel'));
+      el.classList.add('sel');
+    });
+    return el;
+  }
+  FORMATS.forEach(f=>formatsEl.appendChild(makeChip(f)));
+
+  btnPick.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', (e)=> handleFiles(e.target.files));
+
+  drop.addEventListener('drop', (e)=> {
+    const dt = e.dataTransfer;
+    if (dt && dt.files) handleFiles(dt.files);
+  });
+
+  btnClear.addEventListener('click', ()=>{
+    pages = [];
+    render();
+    setLog('Wyczyszczono.');
+    setProg(0);
+  });
+
+  btnSelAll.addEventListener('click', ()=>{
+    pages.forEach(p=>p.selected=true);
+    render();
+  });
+  btnSelNone.addEventListener('click', ()=>{
+    pages.forEach(p=>p.selected=false);
+    render();
+  });
+  btnDelSel.addEventListener('click', ()=>{
+    pages = pages.filter(p=>!p.selected);
+    render();
+  });
+
+  async function handleFiles(fileList){
+    const files = [...fileList];
+    if (!files.length) return;
+
+    const totalFiles = files.length;
+    if ((pages.length + totalFiles) > (MAX_PAGES + MAX_FILES)) {
+      // rough guard; real guard after parsing PDFs into pages
+    }
+
+    setLog('Wczytywanie…');
+    setProg(5);
+
+    for (const f of files) {
+      if (pages.length >= MAX_PAGES) break;
+
+      const isPdf = f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
+      const isImg = f.type.startsWith('image/');
+      if (!isPdf && !isImg) continue;
+
+      if (isPdf) {
+        await addPdfAsPages(f);
+      } else {
+        await addImage(f);
+      }
+    }
+    setProg(100);
+    setTimeout(()=>setProg(0), 600);
+    render();
+    setLog('Gotowe.');
+  }
+
+  async function addImage(file){
+    const blob = file;
+    const dataUrl = await blobToDataURL(blob);
+    const {w,h,rot} = await detectImageInfo(dataUrl);
+    pages.push({
+      id: 'p'+(idSeq++),
+      kind:'img',
+      srcBlob: blob,
+      dataUrl,
+      w,h,
+      rotation: rot || 0,
+      selected:false,
+      filename: file.name
+    });
+  }
+
+  async function addPdfAsPages(file){
+    const arr = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: arr}).promise;
+    const n = Math.min(pdf.numPages, MAX_PAGES - pages.length);
+    for (let i=1; i<=n; i++){
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({scale: 1});
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      // render thumbnail at decent size
+      const scale = Math.min(900/viewport.width, 1200/viewport.height, 1.6);
+      const vp = page.getViewport({scale});
+      canvas.width = Math.floor(vp.width);
+      canvas.height = Math.floor(vp.height);
+      await page.render({canvasContext: ctx, viewport: vp}).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      const blob = await (await fetch(dataUrl)).blob();
+      pages.push({
+        id: 'p'+(idSeq++),
+        kind:'pdf',
+        srcBlob: blob, // store as rendered image blob
+        dataUrl,
+        w: canvas.width,
+        h: canvas.height,
+        rotation: 0,
+        selected:false,
+        filename: file.name,
+        pageIndex: i
+      });
+      if (pages.length >= MAX_PAGES) break;
+    }
+  }
+
+  function render(){
+    thumbsEl.innerHTML = '';
+    updateCounts();
+
+    // sortable for reorder
+    const frag = document.createDocumentFragment();
+
+    pages.forEach((p, idx)=>{
+      const el = document.createElement('div');
+      el.className='thumb';
+      el.dataset.id=p.id;
+
+      const top = document.createElement('div');
+      top.className='topbar';
+      const badge = document.createElement('div');
+      badge.className='badge';
+      badge.textContent = `${idx+1} • ${p.kind==='pdf' ? 'PDF' : 'IMG'}`;
+      const act = document.createElement('div');
+      act.className='actions';
+
+      const btnPrev = document.createElement('div');
+      btnPrev.className='miniBtn';
+      btnPrev.title='Podgląd (lupka)';
+      btnPrev.textContent='🔍';
+      btnPrev.addEventListener('click', ()=> openPreview(p));
+
+      const btnL = document.createElement('div');
+      btnL.className='miniBtn';
+      btnL.title='Obróć w lewo';
+      btnL.textContent='↺';
+      btnL.addEventListener('click', ()=>{ p.rotation = (p.rotation - 90 + 360) % 360; render(); });
+
+      const btnR = document.createElement('div');
+      btnR.className='miniBtn';
+      btnR.title='Obróć w prawo';
+      btnR.textContent='↻';
+      btnR.addEventListener('click', ()=>{ p.rotation = (p.rotation + 90) % 360; render(); });
+
+      const btnX = document.createElement('div');
+      btnX.className='miniBtn';
+      btnX.title='Usuń';
+      btnX.textContent='✖';
+      btnX.addEventListener('click', ()=>{ pages = pages.filter(x=>x.id!==p.id); render(); });
+
+      act.appendChild(btnPrev);
+      act.appendChild(btnL);
+      act.appendChild(btnR);
+      act.appendChild(btnX);
+
+      top.appendChild(badge);
+      top.appendChild(act);
+
+      const img = document.createElement('img');
+      img.src = p.dataUrl;
+      img.alt = p.filename || 'plik';
+      img.style.transform = `rotate(${p.rotation}deg)`;
+      img.style.transformOrigin = 'center center';
+
+      const bot = document.createElement('div');
+      bot.className='bot';
+      const lbl = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type='checkbox';
+      cb.checked = !!p.selected;
+      cb.addEventListener('change', ()=>{ p.selected = cb.checked; updateCounts(); });
+      const nm = document.createElement('span');
+      nm.textContent = (p.filename||'plik').length>18 ? (p.filename||'plik').slice(0,18)+'…' : (p.filename||'plik');
+      lbl.appendChild(cb); lbl.appendChild(nm);
+
+      const sz = document.createElement('div');
+      sz.className='mono';
+      sz.textContent = `${p.w}×${p.h}`;
+
+      bot.appendChild(lbl);
+      bot.appendChild(sz);
+
+      el.appendChild(top);
+      el.appendChild(img);
+      el.appendChild(bot);
+      frag.appendChild(el);
+    });
+
+    thumbsEl.appendChild(frag);
+
+    // init sortable
+    Sortable.create(thumbsEl, {
+      animation: 150,
+      onEnd: (evt)=>{
+        const {oldIndex, newIndex} = evt;
+        if (oldIndex===newIndex) return;
+        const moved = pages.splice(oldIndex,1)[0];
+        pages.splice(newIndex,0,moved);
+        render();
+      }
+    });
+    updateCounts();
+  }
+
+  function openPreview(p){
+    modalScale = 1;
+    modalBody.innerHTML = '';
+    modalTitle.textContent = p.filename || 'Podgląd';
+    modalBadge.textContent = p.kind==='pdf' ? `PDF strona ${p.pageIndex||''}` : 'Obraz';
+    const img = document.createElement('img');
+    img.src = p.dataUrl;
+    img.style.transform = `rotate(${p.rotation}deg) scale(${modalScale})`;
+    img.style.transformOrigin = 'center center';
+    modalBody.appendChild(img);
+    modal.classList.add('show');
+
+    const applyScale = ()=>{
+      img.style.transform = `rotate(${p.rotation}deg) scale(${modalScale})`;
+    }
+    zoomIn.onclick = ()=>{ modalScale = Math.min(3, modalScale+0.2); applyScale(); }
+    zoomOut.onclick = ()=>{ modalScale = Math.max(0.6, modalScale-0.2); applyScale(); }
+  }
+  closeModal.addEventListener('click', ()=> modal.classList.remove('show'));
+  modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.classList.remove('show'); });
+
+  async function blobToDataURL(blob){
+    return await new Promise((res, rej)=>{
+      const r = new FileReader();
+      r.onload = ()=>res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(blob);
+    });
+  }
+
+  // attempt EXIF orientation correction (best effort, no extra lib)
+  async function detectImageInfo(dataUrl){
+    const img = new Image();
+    img.src = dataUrl;
+    await img.decode();
+    // We do not parse EXIF here; rotation default 0.
+    return {w: img.naturalWidth, h: img.naturalHeight, rot: 0};
+  }
+
+  function ensureHavePages(){
+    if (!pages.length) throw new Error('Dodaj najpierw pliki.');
+  }
+
+  function selectedOrAll(){
+    const sel = pages.filter(p=>p.selected);
+    return sel.length ? sel : pages;
+  }
+
+  // Generate PDF A4 like scan using PDF-Lib
+  async function makePdfA4(items){
+    const { PDFDocument, rgb } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+
+    // A4 in points
+    const A4_W = 595.28, A4_H = 841.89;
+
+    let i = 0;
+    for (const p of items){
+      i++;
+      setLog(`PDF: strona ${i}/${items.length}…`);
+      setProg(Math.round((i/items.length)*90));
+
+      const page = pdfDoc.addPage([A4_W, A4_H]);
+      const imgBytes = await p.srcBlob.arrayBuffer();
+
+      let embed;
+      if (p.srcBlob.type === 'image/png') embed = await pdfDoc.embedPng(imgBytes);
+      else embed = await pdfDoc.embedJpg(imgBytes);
+
+      // dimensions after rotation
+      const iw = embed.width;
+      const ih = embed.height;
+      const rot = (p.rotation||0) % 360;
+      const rads = rot * Math.PI / 180;
+
+      // effective image dims for cover/contain calculation
+      const effW = (rot===90||rot===270) ? ih : iw;
+      const effH = (rot===90||rot===270) ? iw : ih;
+
+      let scale;
+      if (optA4.checked){
+        const sx = A4_W / effW;
+        const sy = A4_H / effH;
+        scale = optCover.checked ? Math.max(sx, sy) : Math.min(sx, sy);
+      } else {
+        // keep original size but fit if too big
+        const sx = A4_W / effW;
+        const sy = A4_H / effH;
+        scale = Math.min(1, Math.min(sx, sy));
+      }
+
+      const drawW = effW * scale;
+      const drawH = effH * scale;
+      const x = (A4_W - drawW)/2;
+      const y = (A4_H - drawH)/2;
+
+      // Draw with rotation about center of drawn box
+      page.drawImage(embed, {
+        x: x,
+        y: y,
+        width: drawW,
+        height: drawH,
+        rotate: PDFLib.degrees(rot),
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    return new Blob([pdfBytes], {type:'application/pdf'});
+  }
+
+  async function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }
+
+  async function makeImages(items, mime){
+    // export each page as image file (already image)
+    // If need convert jpg->png or reverse, we do canvas re-encode
+    const out = [];
+    let i=0;
+    for (const p of items){
+      i++;
+      setLog(`Obraz: ${i}/${items.length}…`);
+      setProg(Math.round((i/items.length)*90));
+
+      const img = new Image();
+      img.src = p.dataUrl;
+      await img.decode();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const rot = (p.rotation||0)%360;
+      const swap = (rot===90||rot===270);
+      canvas.width = swap ? img.naturalHeight : img.naturalWidth;
+      canvas.height = swap ? img.naturalWidth : img.naturalHeight;
+
+      ctx.save();
+      ctx.translate(canvas.width/2, canvas.height/2);
+      ctx.rotate(rot*Math.PI/180);
+      ctx.drawImage(img, -img.naturalWidth/2, -img.naturalHeight/2);
+      ctx.restore();
+
+      const blob = await new Promise(res=> canvas.toBlob(res, mime, 0.92));
+      out.push({blob, name: baseName(p, i) + (mime==='image/png'?'.png':'.jpg')});
+    }
+    return out;
+  }
+
+  function baseName(p, i){
+    const raw = (p.filename || 'plik').replace(/\.[^.]+$/,'');
+    const safe = raw.replace(/[^a-z0-9\-_]+/gi,'_').slice(0,24);
+    const idx = String(i).padStart(2,'0');
+    return `${safe}_${idx}`;
+  }
+
+  async function ocrItems(items){
+    // OCR with Tesseract; use "pol+eng" if available
+    const texts = [];
+    let i=0;
+    const worker = await Tesseract.createWorker('pol+eng');
+    for (const p of items){
+      i++;
+      setLog(`OCR: ${i}/${items.length}…`);
+      setProg(Math.round((i/items.length)*90));
+
+      const img = new Image();
+      img.src = p.dataUrl;
+      await img.decode();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      // render rotated to canvas for OCR
+      const rot = (p.rotation||0)%360;
+      const swap = (rot===90||rot===270);
+      canvas.width = swap ? img.naturalHeight : img.naturalWidth;
+      canvas.height = swap ? img.naturalWidth : img.naturalHeight;
+      ctx.save();
+      ctx.translate(canvas.width/2, canvas.height/2);
+      ctx.rotate(rot*Math.PI/180);
+      ctx.drawImage(img, -img.naturalWidth/2, -img.naturalHeight/2);
+      ctx.restore();
+
+      const { data } = await worker.recognize(canvas);
+      const text = (data.text || '').trim();
+      p.textCache = text;
+      texts.push({page: i, text});
+    }
+    await worker.terminate();
+    return texts;
+  }
+
+  async function makeDocxFromText(fullText, filename){
+    const { Document, Packer, Paragraph } = window.docx;
+    const paras = fullText.split(/\n{2,}/).map(t=>t.trim()).filter(Boolean).map(t=>new Paragraph(t));
+    const doc = new Document({ sections: [{ properties: {}, children: paras.length?paras:[new Paragraph(fullText||'')] }] });
+    const blob = await Packer.toBlob(doc);
+    await downloadBlob(blob, filename);
+  }
+
+  function makeCsvFromTexts(texts){
+    const esc = (s)=> `"${String(s).replace(/"/g,'""')}"`;
+    const rows = [["page","text"], ...texts.map(t=>[t.page, t.text])];
+    const csv = rows.map(r=>r.map(esc).join(",")).join("\n");
+    return new Blob([csv], {type:'text/csv;charset=utf-8'});
+  }
+
+  btnMake.addEventListener('click', async ()=>{
+    try{
+      ensureHavePages();
+      const items = selectedOrAll();
+      setProg(5);
+
+      if (selectedFormat === 'pdf'){
+        const pdfBlob = await makePdfA4(items);
+        if (optSeparate.checked){
+          // separate: one-page PDFs zipped
+          const zip = new JSZip();
+          let i=0;
+          for (const p of items){
+            i++;
+            setLog(`PDF osobno: ${i}/${items.length}…`);
+            const b = await makePdfA4([p]);
+            zip.file(baseName(p,i)+'.pdf', b);
+          }
+          const out = await zip.generateAsync({type:'blob'});
+          await downloadBlob(out, 'dinofiles_pdf.zip');
+        } else {
+          await downloadBlob(pdfBlob, 'dinofiles.pdf');
+        }
+      } else if (selectedFormat === 'jpg' || selectedFormat === 'png'){
+        const mime = selectedFormat==='png' ? 'image/png' : 'image/jpeg';
+        const outs = await makeImages(items, mime);
+        if (optSeparate.checked){
+          if (outs.length===1){
+            await downloadBlob(outs[0].blob, outs[0].name);
+          } else {
+            const zip = new JSZip();
+            outs.forEach(o=>zip.file(o.name, o.blob));
+            const out = await zip.generateAsync({type:'blob'});
+            await downloadBlob(out, 'dinofiles_images.zip');
+          }
+        } else {
+          // merged => make a single PDF from images regardless of format choice
+          const pdfBlob = await makePdfA4(items);
+          await downloadBlob(pdfBlob, 'dinofiles.pdf');
+        }
+      } else if (selectedFormat === 'txt' || selectedFormat === 'csv' || selectedFormat === 'docx'){
+        // require OCR pass
+        const texts = await ocrItems(items);
+        const fullText = texts.map(t=>`[Strona ${t.page}]\n${t.text}\n`).join("\n");
+        if (selectedFormat === 'txt'){
+          await downloadBlob(new Blob([fullText], {type:'text/plain;charset=utf-8'}), 'dinofiles.txt');
+        } else if (selectedFormat === 'csv'){
+          const b = makeCsvFromTexts(texts);
+          await downloadBlob(b, 'dinofiles.csv');
+        } else {
+          await makeDocxFromText(fullText, 'dinofiles.docx');
+        }
+      } else {
+        throw new Error('Nieznany format.');
+      }
+
+      setLog('Gotowe.'); setProg(0);
+    } catch(err){
+      setLog('Błąd: ' + err.message);
+      setProg(0);
+    }
+  });
+
+  btnOCR.addEventListener('click', async ()=>{
+    try{
+      ensureHavePages();
+      const items = selectedOrAll();
+      setProg(5);
+      const texts = await ocrItems(items);
+      const fullText = texts.map(t=>`[Strona ${t.page}]\n${t.text}\n`).join("\n");
+      await downloadBlob(new Blob([fullText], {type:'text/plain;charset=utf-8'}), 'dinofiles_ocr.txt');
+      setLog('OCR zakończony.'); setProg(0);
+    } catch(err){
+      setLog('Błąd: ' + err.message);
+      setProg(0);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
