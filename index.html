@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DinoFiles v5.2 (working)</title>
+  <style>
+    :root{--bg:#0b1020;--txt:#e8eefc;--muted:#a9b6d6;--acc:#7bd88f;--b:rgba(255,255,255,.12);--r:18px}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:1050px;margin:0 auto;padding:18px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand h1{margin:0;font-size:22px}
+    .pill{border:1px solid var(--b);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{border:1px solid var(--b);border-radius:var(--r);padding:14px;background:rgba(255,255,255,.03)}
+    .drop{border:1px dashed rgba(255,255,255,.25);border-radius:var(--r);padding:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+    .drop.drag{outline:3px solid rgba(123,216,143,.35)}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+    button{border:1px solid var(--b);background:rgba(255,255,255,.07);color:var(--txt);padding:10px 12px;border-radius:12px;font-weight:700;cursor:pointer}
+    button:hover{background:rgba(255,255,255,.11)}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    button.danger{border-color:rgba(255,107,107,.45);background:rgba(255,107,107,.15)}
+    .muted{color:var(--muted);font-size:12px;line-height:1.4}
+    .tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    select{border:1px solid var(--b);background:rgba(255,255,255,.07);color:var(--txt);padding:10px 12px;border-radius:12px;font-weight:700}
+    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:14px}
+    .item{border:1px solid var(--b);border-radius:16px;overflow:hidden;background:rgba(0,0,0,.18);position:relative}
+    .thumb{height:140px;display:grid;place-items:center;background:rgba(255,255,255,.03);overflow:hidden}
+    .thumb img{max-width:100%;max-height:100%}
+    .meta{padding:10px 10px 12px}
+    .name{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sub{color:var(--muted);font-size:12px;margin-top:4px}
+    .x{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);display:grid;place-items:center;cursor:pointer}
+    .x:hover{background:rgba(0,0,0,.5)}
+    .handle{position:absolute;top:8px;left:8px;width:30px;height:30px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);display:grid;place-items:center;color:var(--muted);cursor:grab}
+    .zoom{position:absolute;bottom:8px;right:8px;width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.32);display:grid;place-items:center;cursor:pointer}
+    .zoom:hover{background:rgba(0,0,0,.5)}
+    dialog{border:none;border-radius:18px;max-width:min(980px,96vw);width:980px;background:rgba(10,14,26,.96);color:var(--txt);padding:0;border:1px solid rgba(255,255,255,.14)}
+    dialog::backdrop{background:rgba(0,0,0,.55)}
+    .dlgTop{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.10)}
+    .dlgBody{padding:14px;display:grid;place-items:center}
+    .dlgBody img{max-width:100%;height:auto;border-radius:14px;border:1px solid rgba(255,255,255,.10)}
+    a{color:inherit}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div style="font-size:26px">🦖</div>
+      <div>
+        <h1>DinoFiles <span class="pill">v5.2 working</span></h1>
+        <div class="muted">Drag&drop + wybór plików + miniatury + kolejność + usuwanie + PDF A4 + OCR (beta)</div>
+      </div>
+    </div>
+    <div class="pill" id="counter">0 plików</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="drop" id="dropzone">
+        <div>
+          <div style="font-weight:900">📥 Dodaj pliki</div>
+          <div class="muted">Przeciągnij tutaj JPG/PNG/PDF lub kliknij „Wybierz pliki”.</div>
+        </div>
+        <div class="btns">
+          <button id="pickBtn">📂 Wybierz pliki</button>
+          <button id="clearBtn" class="danger" disabled>🗑️ Usuń wszystko</button>
+        </div>
+        <input id="fileInput" type="file" multiple accept=".jpg,.jpeg,.png,.pdf,application/pdf,image/jpeg,image/png" style="display:none" />
+      </div>
+
+      <div class="tools">
+        <div class="muted" style="display:flex;align-items:center;gap:8px"><b>Eksport:</b></div>
+        <select id="format">
+          <option value="pdf" selected>PDF</option>
+          <option value="jpg">JPG</option>
+          <option value="png">PNG</option>
+          <option value="txt">TXT (OCR)</option>
+          <option value="csv">CSV (OCR)</option>
+          <option value="docx" disabled>DOCX (wkrótce)</option>
+        </select>
+        <select id="mode">
+          <option value="single" selected>Pobierz osobno</option>
+          <option value="merged">Pobierz 1 plik (scal)</option>
+        </select>
+      </div>
+
+      <div class="tools">
+        <button id="toA4Btn" disabled>📄 PDF A4 (dopasuj jak skan)</button>
+        <button id="mergePdfBtn" disabled>🧩 Scal PDF</button>
+        <button id="ocrBtn" disabled>🔎 OCR (beta) → TXT</button>
+      </div>
+
+      <div class="muted" style="margin-top:10px">
+        Jeśli wcześniej drag&drop otwierał nowe karty — ta wersja globalnie blokuje domyślne zachowanie przeglądarki.
+      </div>
+
+      <div class="list" id="list"></div>
+    </div>
+
+    <div class="card">
+      <div class="muted"><b>Wynik</b></div>
+      <div class="muted" style="margin-top:8px">Po akcji pojawi się link do pobrania (i pobieranie uruchomi się automatycznie).</div>
+      <div id="links" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<dialog id="previewDlg">
+  <div class="dlgTop">
+    <div style="font-weight:900">Podgląd</div>
+    <button id="closeDlg">✖ Zamknij</button>
+  </div>
+  <div class="dlgBody">
+    <img id="previewImg" alt="preview"/>
+  </div>
+</dialog>
+
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+  // Block default behavior of dropping files (opening in new tabs)
+  ['dragenter','dragover','dragleave','drop'].forEach(evt => {
+    window.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); }, {passive:false});
+    document.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); }, {passive:false});
+  });
+
+  const state = { items: [], dragId: null };
+  const $ = (id)=>document.getElementById(id);
+  const dropzone = $('dropzone');
+  const fileInput = $('fileInput');
+  const pickBtn = $('pickBtn');
+  const clearBtn = $('clearBtn');
+  const list = $('list');
+  const counter = $('counter');
+  const toA4Btn = $('toA4Btn');
+  const mergePdfBtn = $('mergePdfBtn');
+  const ocrBtn = $('ocrBtn');
+  const links = $('links');
+  const previewDlg = $('previewDlg');
+  const previewImg = $('previewImg');
+  $('closeDlg').addEventListener('click', ()=>previewDlg.close());
+
+  function uid(){ return Math.random().toString(16).slice(2)+Date.now().toString(16); }
+  function bytes(n){ const u=['B','KB','MB','GB']; let i=0,v=n; while(v>=1024&&i<u.length-1){v/=1024;i++;} return (i===0? v : v.toFixed(1))+' '+u[i]; }
+  function esc(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m])); }
+
+  function setLinks(arr){
+    links.innerHTML='';
+    arr.forEach(({href,name})=>{
+      const a=document.createElement('a');
+      a.href=href; a.download=name;
+      a.textContent='⬇️ '+name;
+      a.style.display='inline-flex';
+      a.style.fontWeight='900';
+      a.style.gap='8px';
+      a.style.marginTop='10px';
+      links.appendChild(a);
+      links.appendChild(document.createElement('br'));
+    });
+  }
+
+  function updateUI(){
+    counter.textContent = state.items.length + ' plik' + (state.items.length===1?'':'ów');
+    const any = state.items.length>0;
+    clearBtn.disabled = !any;
+    toA4Btn.disabled = !any;
+    mergePdfBtn.disabled = !any;
+    ocrBtn.disabled = !any;
+    renderList();
+  }
+
+  function addFiles(fileList){
+    const files = Array.from(fileList || []);
+    if(!files.length) return;
+    for(const f of files){
+      const id = uid();
+      const type = (f.type||'').toLowerCase();
+      const url = URL.createObjectURL(f);
+      state.items.push({id, file:f, type, name:f.name, size:f.size, url});
+    }
+    updateUI();
+  }
+
+  function removeById(id){
+    const idx = state.items.findIndex(x=>x.id===id);
+    if(idx>=0){
+      try{ URL.revokeObjectURL(state.items[idx].url); }catch(e){}
+      state.items.splice(idx,1);
+      updateUI();
+    }
+  }
+
+  function clearAll(){
+    for(const it of state.items){ try{ URL.revokeObjectURL(it.url);}catch(e){} }
+    state.items=[];
+    setLinks([]);
+    updateUI();
+  }
+
+  function renderList(){
+    list.innerHTML='';
+    state.items.forEach((it, i)=>{
+      const el=document.createElement('div');
+      el.className='item';
+      el.draggable=true;
+      el.dataset.id=it.id;
+
+      el.addEventListener('dragstart', (e)=>{ state.dragId=it.id; e.dataTransfer.effectAllowed='move'; });
+      el.addEventListener('dragover', (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; });
+      el.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        const fromId=state.dragId, toId=it.id;
+        if(!fromId || fromId===toId) return;
+        const fromIdx=state.items.findIndex(x=>x.id===fromId);
+        const toIdx=state.items.findIndex(x=>x.id===toId);
+        const moved=state.items.splice(fromIdx,1)[0];
+        state.items.splice(toIdx,0,moved);
+        state.dragId=null;
+        updateUI();
+      });
+
+      const handle=document.createElement('div');
+      handle.className='handle';
+      handle.title='Przeciągnij aby zmienić kolejność';
+      handle.textContent='≡';
+      el.appendChild(handle);
+
+      const x=document.createElement('div');
+      x.className='x'; x.title='Usuń'; x.textContent='✕';
+      x.addEventListener('click', ()=>removeById(it.id));
+      el.appendChild(x);
+
+      const thumb=document.createElement('div');
+      thumb.className='thumb';
+      if(it.type.includes('image')){
+        const img=document.createElement('img');
+        img.src=it.url; img.alt=it.name;
+        thumb.appendChild(img);
+      }else{
+        thumb.innerHTML='<div style="color:var(--muted);font-weight:900">PDF</div>';
+      }
+      el.appendChild(thumb);
+
+      const zoom=document.createElement('div');
+      zoom.className='zoom'; zoom.title='Podgląd'; zoom.textContent='🔍';
+      zoom.addEventListener('click', ()=>{
+        if(it.type.includes('image')){ previewImg.src=it.url; previewDlg.showModal(); }
+        else{ window.open(it.url,'_blank','noopener'); }
+      });
+      el.appendChild(zoom);
+
+      const meta=document.createElement('div');
+      meta.className='meta';
+      meta.innerHTML = `<div class="name">${i+1}. ${esc(it.name)}</div><div class="sub">${it.type.includes('image')?'Obraz':'PDF'} • ${bytes(it.size)}</div>`;
+      el.appendChild(meta);
+
+      list.appendChild(el);
+    });
+  }
+
+  // Dropzone events
+  dropzone.addEventListener('dragenter', ()=>dropzone.classList.add('drag'));
+  dropzone.addEventListener('dragleave', ()=>dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', (e)=>{
+    dropzone.classList.remove('drag');
+    if(e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+  });
+
+  pickBtn.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', ()=>{
+    addFiles(fileInput.files);
+    fileInput.value=''; // allow same file again
+  });
+  clearBtn.addEventListener('click', clearAll);
+
+  async function imagesToA4PDF(items){
+    const { PDFDocument, rgb } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const A4 = { w: 595.28, h: 841.89 }; // points
+
+    for(const it of items){
+      if(!it.type.includes('image')) continue;
+      const ab = await it.file.arrayBuffer();
+      const img = it.type.includes('png') ? await pdfDoc.embedPng(ab) : await pdfDoc.embedJpg(ab);
+      const page = pdfDoc.addPage([A4.w, A4.h]);
+      page.drawRectangle({x:0,y:0,width:A4.w,height:A4.h,color:rgb(1,1,1)});
+
+      const iw=img.width, ih=img.height;
+      const scale=Math.min(A4.w/iw, A4.h/ih);
+      const w=iw*scale, h=ih*scale;
+      const x=(A4.w-w)/2, y=(A4.h-h)/2;
+      page.drawImage(img,{x,y,width:w,height:h});
+    }
+    const bytesOut = await pdfDoc.save();
+    return new Blob([bytesOut],{type:'application/pdf'});
+  }
+
+  async function mergePDFs(items){
+    const { PDFDocument } = PDFLib;
+    const merged = await PDFDocument.create();
+    for(const it of items){
+      if(!it.type.includes('pdf')) continue;
+      const ab = await it.file.arrayBuffer();
+      const src = await PDFDocument.load(ab);
+      const pages = await merged.copyPages(src, src.getPageIndices());
+      pages.forEach(p=>merged.addPage(p));
+    }
+    const bytesOut = await merged.save();
+    return new Blob([bytesOut],{type:'application/pdf'});
+  }
+
+  async function runOCR(items){
+    let out=[];
+    for(const it of items){
+      if(!it.type.includes('image')) continue;
+      const res = await Tesseract.recognize(it.url, 'pol+eng');
+      out.push(`### ${it.name}\n${(res.data.text||'').trim()}\n`);
+    }
+    return out.join('\n');
+  }
+
+  function download(blob, name){
+    const url = URL.createObjectURL(blob);
+    setLinks([{href:url,name}]);
+    const a=document.createElement('a');
+    a.href=url; a.download=name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>{ try{URL.revokeObjectURL(url);}catch(e){} }, 60_000);
+  }
+
+  toA4Btn.addEventListener('click', async ()=>{
+    const blob = await imagesToA4PDF(state.items);
+    download(blob, 'dinofiles_a4_scan.pdf');
+  });
+
+  mergePdfBtn.addEventListener('click', async ()=>{
+    const blob = await mergePDFs(state.items);
+    download(blob, 'dinofiles_scalone.pdf');
+  });
+
+  ocrBtn.addEventListener('click', async ()=>{
+    const text = await runOCR(state.items);
+    const blob = new Blob([text],{type:'text/plain;charset=utf-8'});
+    download(blob, 'dinofiles_ocr.txt');
+  });
+
+  updateUI();
+</script>
+</body>
+</html>
